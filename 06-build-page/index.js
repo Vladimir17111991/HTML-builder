@@ -1,9 +1,11 @@
 const FSP = require('fs/promises');
 const fs = require('fs');
-const {join,parse} = require('path');
+const { join, parse } = require('path');
+const { throws } = require('assert');
 
 const pathFolderCopy = join(__dirname, 'project-dist');
 const pathFolderAssets = join(__dirname, 'assets');
+const newFolderAssets = join(pathFolderCopy, 'assets');
 
 const pathToStyleCss = fs.createWriteStream(join(pathFolderCopy, 'style.css'));
 const pathToStylesCopy = join(__dirname, 'styles');
@@ -12,15 +14,24 @@ const pathToTemplate = join(__dirname, 'template.html');
 const pathToComponents = join(__dirname, 'components');
 let indexHtml = '';
 
-FSP.mkdir(pathFolderCopy, { recursive: true }, (err) => {
-    if (err) throw err;
-});
+try {
+    FSP.mkdir(pathFolderCopy, { recursive: true }, (err) => {
+        if (err) throw err;
+        FSP.mkdir(newFolderAssets, { recursive: true }, (err) => {
+            if (err) throw err;
+        });
+    });
+}
+catch (err) { console.log(err); }
+
+
 /*------------------------------------------------------------------------------------------------------------------------------------*/
 // create folder project-dist and copy folder assets in project-dist
 async function copyDirAssets(src, dest) {
     const files = await FSP.readdir(src, { withFileTypes: true });
     FSP.mkdir(dest, { recursive: true }, (err) => {
         if (err) throw err;
+
     });
     for (let file of files) {
         const srcPath = join(src, file.name);
@@ -62,6 +73,6 @@ async function copyIndex(src, dest) {
     });
 };
 /*------------------------------------------------------------------------------------------------------------------------------------*/
-copyDirAssets(pathFolderAssets, pathFolderCopy);
+copyDirAssets(pathFolderAssets, newFolderAssets);
 copyStyle(pathToStylesCopy, pathToStyleCss);
 copyIndex(pathToTemplate, pathFolderCopy)
